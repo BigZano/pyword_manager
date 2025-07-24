@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import (
 )
 import sys
 import os
-from PyQt5.QtGui import QPixmap 
+from PyQt5.QtGui import QPixmap, QPainter 
+from PyQt5.QtCore import Qt
 
 def add(username, password):
     if username and password:
@@ -71,6 +72,30 @@ def delete(username):
             return False, "User not found."
     except:
         return False, "Could not delete user. Please check the username and try again."
+    
+
+
+
+class ImagePasswordWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.pixmap = QPixmap("Assets/phroog.png")
+        self.password = ""
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Backspace:
+            self.password = self.password[:-1]
+        else:
+            char = event.text()
+            if char.isprintable() and not char.isspace():
+                self.password += char
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        for i in range(len(self.password)):
+            x = i * self.pixmap.width()
+            painter.drawPixmap(x, 0, self.pixmap)
 
 class PasswordManager(QWidget):
     def __init__(self):
@@ -101,8 +126,6 @@ class PasswordManager(QWidget):
         self.labelPassword = QLabel("Password:")
         self.entryPassword = QLineEdit()
         self.entryPassword.setEchoMode(QLineEdit.Password)
-        # Set custom mask character (e.g., '*')
-        self.entryPassword.setPasswordCharacter('*')
         pass_layout.addWidget(self.labelPassword)
         pass_layout.addWidget(self.entryPassword)
         layout.addLayout(pass_layout)
