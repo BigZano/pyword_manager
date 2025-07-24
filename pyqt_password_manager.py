@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import (
 )
 import sys
 import os
-from PyQt5.QtGui import QPixmap, QPainter 
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QPainter
+from PyQt5.QtCore import Qt, QSize
 
 def add(username, password):
     if username and password:
@@ -81,6 +81,12 @@ class ImagePasswordWidget(QWidget):
         super().__init__()
         self.pixmap = QPixmap("Assets/phroog.png")
         self.password = ""
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setCursor(Qt.IBeamCursor)
+
+    def sizeHint(self):
+        # Width: enough for 12 images, Height: image height + a little padding
+        return QSize(self.pixmap.width() * 12, self.pixmap.height() + 8)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Backspace:
@@ -96,6 +102,11 @@ class ImagePasswordWidget(QWidget):
         for i in range(len(self.password)):
             x = i * self.pixmap.width()
             painter.drawPixmap(x, 0, self.pixmap)
+        painter.setPen(Qt.gray)
+        painter.drawRect(0, 0, self.width()-1, self.height()-1)
+
+    def getPassword(self):
+        return self.password
 
 class PasswordManager(QWidget):
     def __init__(self):
@@ -115,17 +126,10 @@ class PasswordManager(QWidget):
         user_layout.addWidget(self.entryName)
         layout.addLayout(user_layout)
 
-        # cute label
-        img_label = QLabel()
-        pixmap = QPixmap("Assets/phroog.png")
-        img_label.setPixmap(pixmap)
-        layout.addWidget(img_label)
-
         # Password
         pass_layout = QHBoxLayout()
         self.labelPassword = QLabel("Password:")
-        self.entryPassword = QLineEdit()
-        self.entryPassword.setEchoMode(QLineEdit.Password)
+        self.entryPassword = ImagePasswordWidget()
         pass_layout.addWidget(self.labelPassword)
         pass_layout.addWidget(self.entryPassword)
         layout.addLayout(pass_layout)
@@ -152,7 +156,7 @@ class PasswordManager(QWidget):
 
     def add_password(self):
         username = self.entryName.text()
-        password = self.entryPassword.text()
+        password = self.entryPassword.getPassword()
         success, msg = add(username, password)
         if success:
             QMessageBox.information(self, "Success", msg)
